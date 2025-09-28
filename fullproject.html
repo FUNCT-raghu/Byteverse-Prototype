@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Biometric Voter Verification System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b, #334155);
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        
+        .glass-effect {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .scan-animation {
+            animation: scan 2s infinite;
+        }
+        
+        @keyframes scan {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .fingerprint-scanner {
+            background: radial-gradient(circle, #3b82f6 0%, #1e40af 100%);
+            animation: pulse 2s infinite;
+        }
+        
+        .success-animation {
+            animation: successPulse 0.6s ease-out;
+        }
+        
+        @keyframes successPulse {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .vote-progress {
+            background: linear-gradient(90deg, #10b981 var(--progress, 0%), #e5e7eb var(--progress, 0%));
+        }
+        
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .particle {
+            position: absolute;
+            background: #3b82f6;
+            border-radius: 50%;
+            opacity: 0.1;
+            animation: float 6s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .candidate-photo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #374151;
+        }
+
+        .voter-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-particles" id="particles"></div>
+
+    <nav class="glass-effect fixed top-0 left-0 right-0 z-50 p-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-vote-yea text-2xl text-blue-400"></i>
+                <h1 class="text-xl font-bold">Digital Voting System</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm bg-green-600 px-3 py-1 rounded-full">
+                    <i class="fas fa-wifi mr-1"></i> Online
+                </span>
+                <button id="admin-btn" class="text-sm bg-gray-600 hover:bg-gray-700 px-3 py-1 rounded-full transition-colors">
+                    <i class="fas fa-cog mr-1"></i> Admin
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="min-h-screen flex items-center justify-center p-4 pt-24">
+        <div class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-2">
+                <div class="glass-effect rounded-3xl p-8 shadow-2xl">
+                    <div class="text-center mb-8">
+                        <img src="https://images.unsplash.com/photo-1589994965851-a8f479c573a9?w=400&h=120&fit=crop&crop=center" alt="Election Commission" class="mx-auto rounded-lg mb-4 shadow-lg w-64 h-20 object-cover">
+                        <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">General Elections 2025</h1>
+                        <p class="text-gray-400">Aadhaar-Linked Biometric Verification System</p>
+                        <div class="flex justify-center items-center mt-2 space-x-4 text-sm">
+                            <span class="bg-blue-600 px-3 py-1 rounded-full">
+                                <i class="fas fa-fingerprint mr-1"></i> Biometric
+                            </span>
+                            <span class="bg-green-600 px-3 py-1 rounded-full">
+                                <i class="fas fa-shield-alt mr-1"></i> Secure
+                            </span>
+                            <span class="bg-purple-600 px-3 py-1 rounded-full">
+                                <i class="fas fa-clock mr-1"></i> Real-time
+                            </span>
+                        </div>
+                    </div>
+
+                    <div id="content-area" class="text-center">
+                        <div id="scanner-section" class="mb-8">
+                            <div id="scanner-visual" class="fingerprint-scanner w-32 h-32 mx-auto rounded-full flex items-center justify-center mb-6 shadow-lg">
+                                <i class="fas fa-fingerprint text-6xl text-white"></i>
+                            </div>
+                            <div id="scanner-instructions" class="space-y-2">
+                                <p class="text-lg font-medium text-gray-300">Place your finger on the scanner</p>
+                                <p class="text-sm text-gray-500">Ensure finger is clean and dry for accurate reading</p>
+                            </div>
+                        </div>
+
+                        <div id="status-section" class="mb-6">
+                            <div id="status-message" class="text-xl font-semibold text-gray-300 mb-3 min-h-[28px]">
+                                Ready to scan fingerprint
+                            </div>
+                            <div id="progress-bar" class="w-full bg-gray-700 rounded-full h-2 mb-4 hidden">
+                                <div id="progress-fill" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <button id="scan-button" class="w-full md:w-auto px-12 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-2xl shadow-lg transform transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span id="scan-text">
+                                <i class="fas fa-fingerprint mr-2"></i>
+                                Start Biometric Scan
+                            </span>
+                            <span id="scan-loading" class="hidden">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>
+                                Scanning...
+                            </span>
+                        </button>
+
+                        <div id="result-section" class="mt-8 hidden">
+                            <div class="glass-effect rounded-2xl p-6 text-left">
+                                <div class="flex items-center mb-4">
+                                    <div id="result-icon" class="text-3xl mr-4"></div>
+                                    <div class="flex-1">
+                                        <h3 id="result-status" class="text-xl font-bold"></h3>
+                                        <p id="result-subtitle" class="text-gray-400 text-sm"></p>
+                                    </div>
+                                    <div id="voter-photo-container" class="ml-4 hidden">
+                                        <img id="voter-photo" class="voter-photo" alt="Voter Photo">
+                                    </div>
+                                </div>
+                                
+                                <div id="voter-details" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-400">Name:</span>
+                                            <span id="voter-name" class="font-semibold"></span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-400">Age:</span>
+                                            <span id="voter-age" class="font-semibold"></span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-400">Voter ID:</span>
+                                            <span id="voter-id" class="font-semibold font-mono text-sm"></span>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-400">Constituency:</span>
+                                            <span id="voter-constituency" class="font-semibold"></span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-400">Polling Station:</span>
+                                            <span id="voter-station" class="font-semibold"></span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-400">Match Score:</span>
+                                            <span id="match-score" class="font-semibold text-green-400"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="candidate-section" class="hidden">
+                                    <h4 class="text-lg font-semibold mb-4 text-center">Select Your Candidate</h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="candidate-grid">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="glass-effect rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-chart-bar mr-2 text-blue-400"></i>
+                        Live Statistics
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Total Votes Cast</span>
+                            <span id="total-votes" class="font-bold text-xl text-green-400">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Turnout Rate</span>
+                            <span id="turnout-rate" class="font-bold text-blue-400">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2">
+                            <div id="turnout-bar" class="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-effect rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-shield-alt mr-2 text-green-400"></i>
+                        Security Status
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-400">Encryption</span>
+                            <span class="text-green-400"><i class="fas fa-check-circle"></i> Active</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-400">Blockchain Sync</span>
+                            <span class="text-green-400"><i class="fas fa-sync-alt fa-spin"></i> Synced</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-400">Audit Trail</span>
+                            <span class="text-green-400"><i class="fas fa-file-alt"></i> Recording</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-400">Network</span>
+                            <span class="text-green-400"><i class="fas fa-wifi"></i> Connected</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-effect rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-clock mr-2 text-purple-400"></i>
+                        Recent Activity
+                    </h3>
+                    <div id="activity-log" class="space-y-3 text-sm max-h-32 overflow-y-auto">
+                        <div class="text-gray-400">System initialized</div>
+                        <div class="text-gray-400">Security protocols activated</div>
+                        <div class="text-gray-400">Ready for voter verification</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="vote-modal" class="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="glass-effect rounded-3xl p-8 w-full max-w-md text-center shadow-2xl">
+            <div class="text-6xl text-green-400 mb-4">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">Vote Cast Successfully!</h3>
+            <p id="vote-confirmation-message" class="text-gray-400 mb-6"></p>
+            
+            <div class="bg-gray-800 rounded-lg p-4 mb-6 text-left">
+                <div class="text-xs text-gray-500 mb-2">VOTE RECEIPT</div>
+                <div class="space-y-1 text-sm">
+                    <div class="flex justify-between">
+                        <span>Transaction ID:</span>
+                        <span id="transaction-id" class="font-mono"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Timestamp:</span>
+                        <span id="vote-timestamp"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Candidate:</span>
+                        <span id="selected-candidate" class="font-semibold"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="close-vote-modal" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors">
+                Continue
+            </button>
+        </div>
+    </div>
+
+    <div id="admin-modal" class="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="glass-effect rounded-3xl p-8 w-full max-w-2xl shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Admin Panel</h3>
+                <button id="close-admin-modal" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-lg">System Status</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span>Active Sessions:</span>
+                            <span class="text-green-400">1</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>System Uptime:</span>
+                            <span id="uptime" class="text-blue-400">00:00:00</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Database Status:</span>
+                            <span class="text-green-400">Connected</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-lg">Quick Actions</h4>
+                    <div class="space-y-2">
+                        <button class="w-full py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-sm transition-colors">
+                            <i class="fas fa-download mr-2"></i>Export Vote Data
+                        </button>
+                        <button class="w-full py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-sm transition-colors">
+                            <i class="fas fa-shield-alt mr-2"></i>Security Audit
+                        </button>
+                        <button id="reset-system" class="w-full py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition-colors">
+                            <i class="fas fa-redo mr-2"></i>Reset System
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const mockVoterDB = [
+            { 
+                id: 'AAR2024001890', 
+                name: 'Raghvendra Singh', 
+                age: 28, 
+                hasBiometrics: true, 
+                city: 'Lucknow', 
+                state: 'Uttar Pradesh',
+                constituency: 'Lucknow Central',
+                station: 'PS-012',
+                hasVoted: false,
+                photo: 'https://images.unsplash.com/photo-1654110455429-cf322b40a906?w=150&h=150&fit=crop&crop=face'
+            },
+            { 
+                id: 'AAR2024002891', 
+                name: 'Rachit Sharma', 
+                age: 24, 
+                hasBiometrics: true, 
+                city: 'Jaipur', 
+                state: 'Rajasthan',
+                constituency: 'Jaipur North',
+                station: 'PS-034',
+                hasVoted: false,
+                photo: 'https://images.unsplash.com/photo-1618077360395-f3068be8e001?w=150&h=150&fit=crop&crop=face'
+            },
+            { 
+                id: 'AAR2024003892', 
+                name: 'Shyam Pathak', 
+                age: 35, 
+                hasBiometrics: true, 
+                city: 'Varanasi', 
+                state: 'Uttar Pradesh',
+                constituency: 'Varanasi South',
+                station: 'PS-067',
+                hasVoted: false,
+                photo: 'https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=150&h=150&fit=crop&crop=face'
+            },
+            { 
+                id: 'AAR2024004893', 
+                name: 'Sumit Kumar', 
+                age: 22, 
+                hasBiometrics: true, 
+                city: 'Patna', 
+                state: 'Bihar',
+                constituency: 'Patna East',
+                station: 'PS-089',
+                hasVoted: false,
+                photo: 'https://images.unsplash.com/photo-1566492031773-4f4e44671d66?w=150&h=150&fit=crop&crop=face'
+            },
+            { 
+                id: 'AAR2024005894', 
+                name: 'Rinkee Sinha', 
+                age: 16, 
+                hasBiometrics: true, 
+                city: 'Kolkata', 
+                state: 'West Bengal',
+                constituency: 'Kolkata North',
+                station: 'PS-156',
+                hasVoted: false,
+                photo: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face'
+            }
+        ];
+
+        const candidates = [
+            { 
+                id: 'CAND001', 
+                name: 'Dr. Rajesh Kumar', 
+                party: 'Progressive Party', 
+                symbol: '🌸',
+                photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face'
+            },
+            { 
+                id: 'CAND002', 
+                name: 'Ms. Anita Desai', 
+                party: 'Unity Alliance', 
+                symbol: '🦅',
+                photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face'
+            },
+            { 
+                id: 'CAND003', 
+                name: 'Mr. Vikram Singh', 
+                party: 'People\'s Front', 
+                symbol: '🌿',
+                photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&h=150&fit=crop&crop=face'
+            },
+            { 
+                id: 'CAND004', 
+                name: 'Mrs. Lakshmi Nair', 
+                party: 'Democratic Union', 
+                symbol: '🔥',
+                photo: 'https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=150&h=150&fit=crop&crop=face'
+            }
+        ];
+
+        let systemState = {
+            totalVotes: 0,
+            startTime: new Date(),
+            currentVoter: null,
+            totalEligibleVoters: mockVoterDB.length,
+            isScanning: false
+        };
+
+        const elements = {
+            scanButton: document.getElementById('scan-button'),
+            scanText: document.getElementById('scan-text'),
+            scanLoading: document.getElementById('scan-loading'),
+            statusMessage: document.getElementById('status-message'),
+            progressBar: document.getElementById('progress-bar'),
+            progressFill: document.getElementById('progress-fill'),
+            resultSection: document.getElementById('result-section'),
+            resultStatus: document.getElementById('result-status'),
+            resultSubtitle: document.getElementById('result-subtitle'),
+            resultIcon: document.getElementById('result-icon'),
+            candidateSection: document.getElementById('candidate-section'),
+            candidateGrid: document.getElementById('candidate-grid'),
+            voterPhotoContainer: document.getElementById('voter-photo-container'),
+            voterPhoto: document.getElementById('voter-photo'),
+            voteModal: document.getElementById('vote-modal'),
+            adminModal: document.getElementById('admin-modal'),
+            totalVotes: document.getElementById('total-votes'),
+            turnoutRate: document.getElementById('turnout-rate'),
+            turnoutBar: document.getElementById('turnout-bar'),
+            activityLog: document.getElementById('activity-log')
+        };
+
+        function initializeSystem() {
+            createFloatingParticles();
+            updateStatistics();
+            updateUptime();
+            setInterval(updateUptime, 1000);
+            
+            elements.scanButton.addEventListener('click', startBiometricScan);
+            document.getElementById('admin-btn').addEventListener('click', openAdminModal);
+            document.getElementById('close-admin-modal').addEventListener('click', closeAdminModal);
+            document.getElementById('close-vote-modal').addEventListener('click', closeVoteModal);
+            document.getElementById('reset-system').addEventListener('click', resetSystem);
+            
+            logActivity('System initialized successfully');
+        }
+
+        function createFloatingParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.width = particle.style.height = Math.random() * 10 + 5 + 'px';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        async function startBiometricScan() {
+            if (systemState.isScanning) return;
+            
+            systemState.isScanning = true;
+            elements.scanButton.disabled = true;
+            elements.scanText.classList.add('hidden');
+            elements.scanLoading.classList.remove('hidden');
+            elements.resultSection.classList.add('hidden');
+            elements.progressBar.classList.remove('hidden');
+
+            await simulateBiometricScan();
+            
+            const voter = mockVoterDB[Math.floor(Math.random() * mockVoterDB.length)];
+            systemState.currentVoter = voter;
+            
+            await processVerificationResult(voter);
+            
+            systemState.isScanning = false;
+            elements.scanButton.disabled = false;
+            elements.scanText.classList.remove('hidden');
+            elements.scanLoading.classList.add('hidden');
+            elements.progressBar.classList.add('hidden');
+        }
+
+        function simulateBiometricScan() {
+            return new Promise((resolve) => {
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 15 + 5;
+                    if (progress > 100) progress = 100;
+                    
+                    elements.progressFill.style.width = progress + '%';
+                    
+                    if (progress < 30) {
+                        elements.statusMessage.textContent = 'Capturing fingerprint...';
+                    } else if (progress < 60) {
+                        elements.statusMessage.textContent = 'Processing biometric data...';
+                    } else if (progress < 90) {
+                        elements.statusMessage.textContent = 'Matching with database...';
+                    } else {
+                        elements.statusMessage.textContent = 'Finalizing verification...';
+                    }
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        setTimeout(resolve, 500);
+                    }
+                }, 100);
+            });
+        }
+
+        async function processVerificationResult(voter) {
+            elements.resultSection.classList.remove('hidden');
+            elements.resultSection.classList.add('success-animation');
+            
+            elements.voterPhoto.src = voter.photo;
+            elements.voterPhotoContainer.classList.remove('hidden');
+            
+            document.getElementById('voter-name').textContent = voter.name;
+            document.getElementById('voter-age').textContent = voter.age + ' years';
+            document.getElementById('voter-id').textContent = voter.id;
+            document.getElementById('voter-constituency').textContent = voter.constituency;
+            document.getElementById('voter-station').textContent = voter.station;
+            document.getElementById('match-score').textContent = (Math.random() * 10 + 90).toFixed(1) + '%';
+            
+            if (voter.hasVoted) {
+                showIneligibleResult('Already Voted', 'This voter has already cast their vote.');
+                logActivity(`Duplicate vote attempt: ${voter.name}`);
+            } else if (voter.age < 18) {
+                showIneligibleResult('Age Restriction', 'Voter is under 18 years old.');
+                logActivity(`Underage vote attempt: ${voter.name} (${voter.age} years)`);
+            } else if (!voter.hasBiometrics) {
+                showIneligibleResult('Biometric Mismatch', 'Fingerprint could not be verified.');
+                logActivity(`Biometric verification failed: ${voter.name}`);
+            } else {
+                showEligibleResult(voter);
+                logActivity(`Voter verified: ${voter.name}`);
+            }
+        }
+
+        function showEligibleResult(voter) {
+            elements.resultStatus.textContent = 'Verification Successful';
+            elements.resultSubtitle.textContent = 'Voter is eligible to cast vote';
+            elements.resultIcon.innerHTML = '<i class="fas fa-check-circle text-green-400"></i>';
+            elements.statusMessage.textContent = 'Voter verified successfully! Please select your candidate.';
+            
+            elements.candidateSection.classList.remove('hidden');
+            populateCandidates();
+        }
+
+        function showIneligibleResult(title, reason) {
+            elements.resultStatus.textContent = title;
+            elements.resultSubtitle.textContent = reason;
+            elements.resultIcon.innerHTML = '<i class="fas fa-times-circle text-red-400"></i>';
+            elements.statusMessage.textContent = 'Verification failed. Please contact booth officer.';
+            elements.candidateSection.classList.add('hidden');
+        }
+
+        function populateCandidates() {
+            elements.candidateGrid.innerHTML = '';
+            
+            candidates.forEach(candidate => {
+                const button = document.createElement('button');
+                button.className = 'candidate-button p-4 bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white rounded-2xl shadow-lg transform transition-all duration-200 hover:scale-105 border border-gray-600';
+                button.innerHTML = `
+                    <div class="flex items-center space-x-3 mb-3">
+                        <img src="${candidate.photo}" alt="${candidate.name}" class="candidate-photo">
+                        <div class="text-3xl">${candidate.symbol}</div>
+                    </div>
+                    <div class="text-left">
+                        <div class="font-semibold text-lg">${candidate.name}</div>
+                        <div class="text-sm text-gray-400">${candidate.party}</div>
+                    </div>
+                `;
+                button.addEventListener('click', () => castVote(candidate));
+                elements.candidateGrid.appendChild(button);
+            });
+        }
+
+        function castVote(candidate) {
+            systemState.currentVoter.hasVoted = true;
+            systemState.totalVotes++;
+            
+            const transactionId = 'TXN' + Date.now().toString(36).toUpperCase();
+            const timestamp = new Date().toLocaleString();
+            
+            document.getElementById('vote-confirmation-message').textContent = 
+                `Your vote for ${candidate.name} has been securely recorded and encrypted.`;
+            document.getElementById('transaction-id').textContent = transactionId;
+            document.getElementById('vote-timestamp').textContent = timestamp;
+            document.getElementById('selected-candidate').textContent = candidate.name;
+            
+            elements.voteModal.classList.remove('hidden');
+            
+            updateStatistics();
+            logActivity(`Vote cast for ${candidate.name} by ${systemState.currentVoter.name}`);
+            
+            setTimeout(() => {
+                resetForNextVoter();
+            }, 3000);
+        }
+
+        function updateStatistics() {
+            elements.totalVotes.textContent = systemState.totalVotes;
+            const turnoutRate = ((systemState.totalVotes / systemState.totalEligibleVoters) * 100);
+            elements.turnoutRate.textContent = turnoutRate.toFixed(1) + '%';
+            elements.turnoutBar.style.width = Math.min(turnoutRate, 100) + '%';
+        }
+
+        function logActivity(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'text-gray-400 text-xs';
+            logEntry.innerHTML = `<span class="text-gray-500">${timestamp}</span> ${message}`;
+            
+            elements.activityLog.insertBefore(logEntry, elements.activityLog.firstChild);
+            
+            while (elements.activityLog.children.length > 10) {
+                elements.activityLog.removeChild(elements.activityLog.lastChild);
+            }
+        }
+
+        function updateUptime() {
+            const uptime = new Date() - systemState.startTime;
+            const hours = Math.floor(uptime / (1000 * 60 * 60));
+            const minutes = Math.floor((uptime % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((uptime % (1000 * 60)) / 1000);
+            
+            document.getElementById('uptime').textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function openAdminModal() {
+            elements.adminModal.classList.remove('hidden');
+        }
+
+        function closeAdminModal() {
+            elements.adminModal.classList.add('hidden');
+        }
+
+        function closeVoteModal() {
+            elements.voteModal.classList.add('hidden');
+        }
+
+        function resetForNextVoter() {
+            elements.resultSection.classList.add('hidden');
+            elements.voterPhotoContainer.classList.add('hidden');
+            elements.statusMessage.textContent = 'Ready for next voter';
+            setTimeout(() => {
+                elements.statusMessage.textContent = 'Place your finger on the scanner';
+            }, 2000);
+        }
+
+        function resetSystem() {
+            if (confirm('Are you sure you want to reset the system? This will clear all vote counts.')) {
+                systemState.totalVotes = 0;
+                systemState.startTime = new Date();
+                mockVoterDB.forEach(voter => voter.hasVoted = false);
+                updateStatistics();
+                resetForNextVoter();
+                logActivity('System reset by administrator');
+                closeAdminModal();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeSystem);
+    </script>
+</body>
+</html>
